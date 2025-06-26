@@ -1,25 +1,39 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import LoginScreen from './components/Loginscreen';
+import AdminDashboard from './components/AdminLayout';
 
 function App() {
+  const [token, setToken] = useState(localStorage.getItem('admin_token') || null);
+
+  const handleLogin = (newToken) => {
+    localStorage.setItem('admin_token', newToken);
+    setToken(newToken);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_token');
+    setToken(null);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/login" element={<LoginScreen onLogin={handleLogin} />} />
+      <Route
+        path="/admin/*"
+        element={
+          <PrivateRoute token={token}>
+            <AdminDashboard token={token} onLogout={handleLogout} />
+          </PrivateRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 }
+
+const PrivateRoute = ({ token, children }) => {
+  return token ? children : <Navigate to="/login" replace />;
+};
 
 export default App;
